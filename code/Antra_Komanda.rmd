@@ -35,7 +35,14 @@ Informacija apie duomenis pateikta lenteleje.
 ```{r,  echo=FALSE, message=FALSE}
 # load data
 myData <- read.csv("D:/0314/DataGEO/samplekey.csv", as.is = TRUE)
-head(myData)
+#head(myData)
+
+ info <- myData[, c(1:8, 10:14, 16:22)]
+head(info)
+
+taspats <- myData[, c(9,15)]
+taspats[1, ]
+
 ```
 
 ```{r,  echo=FALSE, message=FALSE}
