@@ -1,0 +1,360 @@
+twd()---
+title: "Citozino modifikacijos atspindi cirkadini ritma, kuris yra susijes su epigenetine ivairove ir senejimu"
+author: "Dominika Barilovic, Ernesta Petraityte"
+date: "30 March 2019"
+output: html_document
+---
+Cirkadinis ritmas yra vienas is seniausiu evoliuciniu prisitaikymu prie dienos ir nakties ciklu. Jis reguliuoja platu biologiniu reiskiniu spektra - nuo temperaturos priklausomu, prokariotu biocheminiu reakciju greiciu svyravimu, iki miego ir pabudimo ciklu. Cirkadinio ritmo sutrikimai yra susije su zmoniu sergamumu, iskaitant vezi, nuotaikos pokycius ir neurodegeneracines ligas. Be to, daugybe tyrimu parode rysi tarp cirkadinio sutrikimo ir senejimo. Pavyzdziui, vyresniems grauzikams cirkadinis reguliavimas tampa silpnesnis, o peles, kurioms truksta pagrindiniu cirkadianiniu genu, gyvena trumpiau. 
+
+Pezentacija apie musu duomenis
+
+1.	Meginiu skaicius duomenu bazeje: 1057 
+
+2.	Duota informacija apie meginius(meginiuose): chrosomo numeris, genomo koordinate, (sekvenavimo) kryptis, nemetilinimo skaicius, metilinimo skaicius, CHH / CHG / CG kontekstas citozine (taciau mes atsifiltavome duomenis, kur yra tik CG), tiksli ankstesnio konteksto seka (exact sequence of the previous context). (https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM2222702) .
+
+3.	 Naudotas eksperimento dizainas: Peles buvo laikomos atskirai, jos buvo girdytos ir maitinamos, narve su 17cm skersmens ratuku. Gyvunai buvo tiriami 24 valandas: 12 valandas sviesoje  ir 12 valandas tamsoje. 
+Peles,9, 15 arba 25 menesiu amziaus, buvo eutanizuotos, kad butu galima paimti audiniu is gimdos kaklelio. Surinkti audiniai buvo uzsaldyti skystame azoto sluoksnyje ir laikomi -80 ° C temperaturoje pries tyrima. Sekvenavimo eksperimentas buvo atliktas trimis egzemplioriais, panaudojant spynos bisulfito / oksibisulfito seka
+
+4.	Signalo gavimo platforma ir metodas: GPL17021 Illumina HiSeq 2500 (Mus musculus)
+
+5.	Pagrindiniai darbo rezultatai: Cirkadinis ritmas yra vienas is seniausiu evoliuciniu prisitaikymu prie dienos ir nakties ciklu. Svarbu pazymeti, jog citozinai, kurie turi cirkadini epigenini virpesi yra panasus i citozinus, kurie modifikacijos metu (laikui begant) patiria amziaus pokyciu. Tyrimo isvados parode, jog evoliuciskai naudingi procesai, tokie kaip cirkadinis ritmas, taip pat prisideda prie organizmo senejimo.
+
+6.	 Idejos, kas galejo buti istirta dar: Galima tirti nuo kurio amziaus cirkadinis ritmas organizme stipreja ir silpneja. Kaip veikia cirkadinis ritmas sergant tam tikromis ligomis. 
+
+Problemos
+Sumazinus failus neatitiko chromosomu vietos, todel mes duomenis sutraukeme;
+Negalejome pasiimti visu 1057 failu, kadangi neuzteko kompiuteriu resusu;
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE }
+knitr::opts_chunk$set(root.dir = normalizePath("D:"), echo = TRUE)
+```
+
+##STEP1
+
+Informacija apie duomenis pateikta lenteleje. 
+```{r,  echo=FALSE, message=FALSE}
+# load data
+myData <- read.csv("../meta/sample.csv", as.is = TRUE)
+
+```
+
+```{r,  echo=FALSE, message=FALSE}
+#CG-and-7chr-filter
+dir.create("../output/filtered", showWarnings = FALSE)
+filePath <- file.path( "..", "input");
+filelist = list.files(path="../input/", pattern = "*.gz$") # failu pavadinimu lis$
+columnNames <- (c("Chromosome","Position", "Strand","Count methylated", "Count unmethylated", "C-context", "Trinucleotide context"))
+for(i in 1:length(filelist)){
+  filePath <- file.path( "..", "input", filelist[i]);
+  table <- (read.table(filePath))
+  colnames(table) <-(columnNames);
+  finalName <- (paste(filelist[i],"filtered", sep="."))
+  filePath <- file.path("..", "output", "filtered", finalName)
+  file.create(filePath)
+  write.table(table[table$Chromosome == "chr7" & table$`C-context` == "CG",], filePath, sep=" ",row.names=FALSE, col.names=FALSE, quote=FALSE)
+}
+
+#remove(table)
+remove(filelist)
+remove(filePath)
+remove(finalName)
+remove(i)
+
+```
+
+
+```{r,  echo=FALSE, message=FALSE}
+#input3Columns
+dir.create("../output/columns", showWarnings = FALSE)
+filelist = list.files(path="../output/filtered", pattern = "*.filtered$") # failu pavadinimu lis$
+
+for(i in 1:length(filelist)){
+  filePath <- file.path("..", "output", "filtered", filelist[i])
+  table <- (read.table(filePath))
+  finalName <- (paste(filelist[i],"columns", sep="."))
+  filePath <- file.path( "..", "output", "columns", finalName)
+  file.create(filePath)
+  write.table(table[,c(1:3)], filePath, sep=" ",row.names=FALSE, col.names=FALSE, quote=FALSE)
+}
+
+#remove(table)
+remove(filelist)
+remove(filePath)
+remove(finalName)
+remove(i)
+
+```
+
+
+
+
+```{r,  echo=FALSE, message=FALSE}
+#finPatern
+
+
+filePath <- file.path("..", "output", "pattern.txt")
+file.create(filePath)
+
+filePath <- file.path("..", "output","columns", "GSM2222702_P1_B10_JV_L_15M_ZT28-29874935.bismark_pe.probe_matches.CX_report.txt.gz.filtered.columns" )
+tableOne <- (read.delim(filePath, header=FALSE, as.is=TRUE))
+filePath <- file.path("..", "output", "filtered")
+filelist = list.files(path="../output/filtered", pattern = ".*.filtered") # failu pavadinimu listas
+filePath <- file.path("..","output", "filtered", filelist[1])
+tmpFile <-read.table(filePath, header=FALSE, as.is=TRUE)
+
+matchedPattern <-tmpFile[, c(1,2,3)]
+MetilMatrix = matrix(nrow = length(tmpFile[,1]) , ncol = length(filelist))
+
+for (name in filePath) {
+  tmp <- read.table(name, header=FALSE, as.is=TRUE)
+  col3 <-tmp[, c(1,2,3)]
+  matchedPattern <-unique(rbind(col3, matchedPattern))
+}
+filePath <- file.path("..", "output", "pattern.txt")
+write.table(matchedPattern, filePath, sep=" ",row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+remove(col3)
+remove(matchedPattern)
+remove(MetilMatrix)
+remove(tableOne)
+remove(tmp)
+remove(tmpFile)
+
+```
+
+
+```{r,  echo=FALSE, message=FALSE}
+#finalMatching
+
+dir.create("../output/final", showWarnings = FALSE)
+
+filePath <- file.path("..", "output", "pattern.txt")
+patternLines <- readLines(filePath)
+filelist = list.files(path="../output/columns", pattern = "*.columns$") # failu pavadinimu listas
+filelistFull = list.files(path="../output/filtered", pattern = "*.filtered$") # failu pavadinimu listas
+
+count <- 0;
+for (name in filelist) {
+  count <- count +1;
+  filePath <- file.path("..", "output","columns", name)
+  fileCol <- readLines(filePath)
+  fullFileNames <- filelistFull[count]
+
+  filePath <- file.path("..", "output","filtered", fullFileNames)
+  fullFiles <- read.table(filePath)
+
+  final<-(paste(name,"final", sep="."))
+  filePath <- file.path("..", "output","final", final)
+  file.create(filePath)
+
+  write.table(fullFiles[match(patternLines, fileCol),],filePath,sep=" ",row.names=FALSE, col.names=FALSE, quote=FALSE)
+}
+
+remove(filelist)
+remove(filelistFull)
+remove(patternLines)
+remove(filePath)
+remove(fileCol)
+remove(fullFiles)
+remove(fullFileNames)
+remove(final)
+remove(name)
+remove(count)
+
+```
+
+
+
+
+```{r,  echo=FALSE, message=FALSE}
+#metilNonMetil
+#dir.create("../output/metilNonMetil")
+
+filePath <- file.path("..", "output","final")
+filelist = list.files(path="../output/final", pattern = "*.final$")
+commonMetilNonMetil <- list();
+commonMetilProc<- list();
+
+columnNames <- 0;
+
+for(i in 1:length(filelist)){
+  columnNames[i] <- substr(filelist[i], 1, 10)
+}
+
+for(i in 1:length(filelist)){
+    filePath <- file.path("..", "output","final", filelist[i])
+    table <-  read.table(filePath)
+    extra_info <- table[,1:3]
+    table1 <- table[,4:5]
+    metilNonMetil <- ((table1[,1])+(table1[,2]))
+    commonMetilNonMetil[[i]] <- data.frame(metilNonMetil)
+    commonMetilProc[[i]]<-data.frame(table[,5])
+ }
+
+df <- do.call(cbind.data.frame, commonMetilNonMetil)
+moreThan30 <- df[df$metilNonMetil>30,] ##Issaugo tik tas eilutes, kuriose metil nonmetil suma daugiau uz 30
+  
+dff <- do.call(cbind.data.frame, commonMetilProc)## sukuriu metilinimo data frama
+metilTotal <- cbind(extra_info,dff) ## sujungiu metilinimo masyva su informacija
+metil <-   metilTotal[df$metilNonMetil > 30,] ## issaugau tik tas metilinimo masyvo eilutes, kur metil nonmetil suma daugiau uz 30
+  
+extra_info <- extra_info[df$metilNonMetil>30,]
+metilProc <- metil[,c(4:ncol(metil))]/moreThan30 #apskaiciuojame metilinimo procenta
+metilProc <- cbind(extra_info, metilProc) ##sujungiu extra_info su metilProc, kad galeciau ismesti eilutes papildomoje informacijoje
+metilProcInfo <- metilProc[complete.cases(metilProc), ] ##istriname eilutes su NA
+#lenteleje metilProcInfo yra extrainfo ir metilproc
+#labiausiai reikes tik situ dalyku
+metilProc <- metilProcInfo[,c(4:ncol(metilProc))]
+colnames(metilProc) <- columnNames;
+extra_info <- metilProcInfo[,c(1:3)] ## is naujo issaugau extra_info
+  
+finalName <- (paste("metilProc","metilNonMetil", sep="."))
+filePath <- file.path("..", "output","metilNonMetil", finalName)
+file.create(filePath)
+write.table(metilProc, filePath, sep=" ",row.names=FALSE, col.names=FALSE, quote=FALSE)
+
+remove(commonMetilNonMetil)
+remove(commonMetilProc)
+remove(dff)
+remove(moreThan30)
+remove(metilTotal)
+remove(metil)
+remove(metilNonMetil)
+remove(table1)
+remove(filelist)
+remove(filePath)
+remove(finalName)
+remove(i)
+remove(columnNames)
+
+extra_info[1:10,]
+metilProc[1:10,]
+
+```
+
+Koreliacijos breziniai: 
+```{r,  echo=FALSE, message=FALSE}
+#IAC
+df = metilProc
+IAC=cor(df, use = "p")
+hist(IAC,sub=paste("Mean=",format(mean(IAC[upper.tri(IAC)]),digits=3))) 
+
+library(cluster) 
+cluster1=hclust(as.dist(1-IAC),method="average")
+plot(cluster1,cex=0.7,labels=dimnames(df)[[2]])
+
+meanIAC=apply(IAC,2,mean) 
+sdCorr=sd(meanIAC)
+numbersd=(meanIAC-mean(meanIAC))/sdCorr
+plot(numbersd) 
+
+abline(h=0.0)
+sdout=0.0 
+outliers=dimnames(df)[[2]][numbersd<sdout]
+outliers
+dat3=df[,numbersd>sdout]
+dim(dat3)
+IAC=cor(dat3,use="p")
+hist(IAC,sub=paste("Mean=",format(mean(IAC[upper.tri(IAC)]),digits=3))) 
+
+cluster1=hclust(as.dist(1-IAC),method="average")
+plot(cluster1,cex=0.7,labels=dimnames(dat3)[[2]]) 
+
+meanIAC=apply(IAC,2,mean)
+sdCorr=sd(meanIAC)
+numbersd=(meanIAC-mean(meanIAC))/sdCorr
+plot(numbersd)
+
+abline(h= 0.0) 
+
+sdout= 0.0
+outliers=dimnames(dat3)[[2]][numbersd<sdout]
+outliers 
+
+dat4=dat3[,numbersd>sdout]
+dim(dat4)
+
+IAC=cor(dat4,use="p")
+hist(IAC,sub=paste("Mean=",format(mean(IAC[upper.tri(IAC)]),digits=3))) 
+
+```
+
+##STEP2
+
+```{r,  echo=FALSE, message=FALSE}
+##klusterizavimas
+
+library(WGCNA)
+
+metilProc <- metilProc[1:100,]
+dd <- 1 - cor(metilProc)
+dd <- as.dist(dd)
+hc <- hclust(dd, method = "ward.D2")
+plotDendroAndColors(hc, colors = labels2colors(myData$CHAR_tissue[1:10]), groupLabels = c('tissue'))
+```
+
+
+```{r,  echo=FALSE, message=FALSE}
+library(WGCNA)
+
+if (!require("gplots")) {
+   install.packages("gplots", dependencies = TRUE)
+   library(gplots)
+}
+if (!require("RColorBrewer")) {
+   install.packages("RColorBrewer", dependencies = TRUE)
+   library(RColorBrewer)
+}
+
+#cia reiksnuskaityti normaliai, dabar tik paemu jau turimas lenteles
+##filePath <- file.path("..", "output","metilNonMetil", "metilProc.metilNonMetil")
+
+rnames <- extra_info[1:100,2]
+#cia naudoju metilProc matrica
+mat_data<-metilProc[1:100,]
+#rownames(mat_data) <- rnames 
+#is eiluciu atemu vidurkius
+vidurkiai <- rowMeans(mat_data)
+Mo <- mat_data - vidurkiai
+
+
+# creates a own color palette from red to green
+my_palette <- colorRampPalette(c("red", "yellow", "green"))(n = 299)
+
+# (optional) defines the color breaks manually for a "skewed" color transition
+col_breaks = c(seq(-1,0,length=100),  # for red
+  seq(0.01,0.8,length=100),           # for yellow
+  seq(0.81,1,length=100))             # for green
+
+
+
+heatmap.2(as.matrix(Mo),
+          trace = "none", 
+          density.info = "none",
+          ColSideColors =  labels2colors(myData$CHAR_tissue[1:10]))
+
+
+```
+
+```{r,  echo=FALSE, message=FALSE}
+##principines komponentes
+
+pc <- prcomp(t(Mo))
+
+pairs(pc$x[,1:5])
+
+```
+
+```{r,  echo=FALSE, message=FALSE}
+# Siejam failus su sample key
+myData <- read.csv("../meta/sample.csv", as.is = TRUE)
+samplesIds <- myData[, 1]
+metilProcTable <- read.table("../output/metilNonMetil/metilProc.metilNonMetil", as.is = TRUE);
+filelist <- list.files(path="../input/", pattern = "*.gz$") # failu pavadinimu lis$
+for(i in 1:length(filelist)){
+  sampleKeys[i] <- substr(filelist[i], 1, 10)
+  infoAboutSample <- myData[myData$Accession==sampleKeys,]
+}
+
+```
+
